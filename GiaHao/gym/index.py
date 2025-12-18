@@ -17,7 +17,9 @@ def login_my_user():
     if request.method.__eq__('POST'):
         username = request.form.get('username')
         password = request.form.get('password')
-        user = dao.auth_user(username, password)
+        role=request.form.get('role')
+        print(username, password, role)
+        user = dao.auth_user(username, password, role)
         if user:
             login_user(user)
             return redirect('/')
@@ -28,6 +30,9 @@ def login_my_user():
 def logout_by_user():
     logout_user()
     return redirect('/login')
+@app.route('/reception')
+def reception():
+    return render_template('letan/index.html')
 @login.user_loader
 def get_user(id):
     return dao.get_user_by_id(id)
