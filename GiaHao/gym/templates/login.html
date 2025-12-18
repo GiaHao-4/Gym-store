@@ -9,16 +9,15 @@
     {{ err_msg }}
 </div>
 {% endif %}
-<form action="/action_page.php">
-    <label for="sel1" class="form-label">Chọn Role:</label>
-    <select class="form-select" id="sel1" name="sellist1">
-        <option>Admin</option>
-        <option>Lễ tân</option>
-        <option>PT</option>
-        <option>Thu ngân</option>
-    </select>
-</form>
 <form method="post">
+    <label for="sel1" class="form-label">Chọn Role:</label>
+    <select class="form-select" id="sel1" name="role">
+        <option value="ADMIN">Admin</option>
+        <option value="LETAN">Lễ tân</option>
+        <option value="PT">PT</option>
+        <option value="THUNGAN">Thu ngân</option>
+        <option value="HOIVIEN">Hội viên</option>
+    </select>
     <div class="form-floating mb-3 mt-3">
         <input type="text" class="form-control" id="email" placeholder="Nhập tài khoản" name="username">
         <label for="email">Tài khoản</label>

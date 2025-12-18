@@ -12,10 +12,14 @@
                 {% if current_user.is_authenticated %}
                 <li class="nav-item">
                     <a class="nav-link active" href="/login">
-                        <width="25">
                         Chào {{ current_user.full_name }}!
                     </a>
                 </li>
+                {% if current_user.role.name =='LETAN' %}
+                <li class="nav-item">
+                    <a class="nav-link active" href="/reception">&#128100;Hội Viên</a>
+                </li>
+                {%endif%}
                 <li class="nav-item">
                     <a class="nav-link active" href="/logout">&#128508;Đăng xuất</a>
                 </li>
