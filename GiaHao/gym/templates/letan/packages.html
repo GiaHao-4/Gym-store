@@ -1,0 +1,117 @@
+{% extends 'admin/master.html' %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #f8f9fc; }
+        
+        .pricing-card {
+            border: none;
+            border-radius: 15px;
+            transition: all 0.3s;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        .card-header-custom {
+            background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+            padding: 30px 20px;
+            color: white;
+            text-align: center;
+        }
+
+        .price-tag {
+            font-size: 2.5rem;
+            font-weight: 800;
+        }
+        
+        .price-currency {
+            font-size: 1rem;
+            vertical-align: top;
+            opacity: 0.8;
+        }
+
+        .duration-tag {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .features-list {
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .features-list p {
+            margin-bottom: 15px;
+            color: #5a5c69;
+        }
+
+        .btn-select-package {
+            width: 100%;
+            border-radius: 50px;
+            padding: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="text-center mb-5">
+        <h2 class="font-weight-bold text-uppercase text-dark">Chọn Gói Tập</h2>
+        <p class="text-muted">Bước 1: Vui lòng chọn gói tập phù hợp để bắt đầu đăng ký hội viên</p>
+    </div>
+
+    <div class="row">
+        {% for p in packages %}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card pricing-card h-100">
+                <div class="card-header-custom">
+                    <h4 class="font-weight-bold">{{ p.name }}</h4>
+                    <div class="price-tag">
+                        {{ "{:,.0f}".format(p.price) }} <span class="price-currency">VNĐ</span>
+                    </div>
+                    <div class="duration-tag">
+                        <i class="fas fa-clock"></i> Thời hạn: {{ p.duration }} tháng
+                    </div>
+                </div>
+                
+                <div class="card-body d-flex flex-column">
+                    <div class="features-list flex-grow-1">
+                        <p>{{ p.description }}</p>
+                        <p><i class="fas fa-check text-success mr-2"></i>Không giới hạn thời gian</p>
+                        <p><i class="fas fa-check text-success mr-2"></i>Sử dụng tủ đồ miễn phí</p>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <a href="/reception/register-member?package_id={{p.id}}" class="btn btn-primary btn-select-package">
+                            <i class="fas fa-cart-plus"></i> Chọn Gói Này
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="text-center mt-4">
+        <a href="/reception" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Quay lại Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
