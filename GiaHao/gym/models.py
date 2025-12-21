@@ -1,7 +1,7 @@
 import json
 
 from gym import db, app
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, Boolean, DateTime, Enum
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Boolean, DateTime, Enum, Double, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from enum import Enum as RoleEnum
@@ -21,6 +21,7 @@ class Staff(db.Model, UserMixin):
     email = db.Column(db.String(500), nullable=False, unique=True)
     phone = db.Column(db.Integer, nullable=False, unique=True)
     role=db.Column(Enum(UserRole))
+    receipts=relationship("Receipt", backref="staff", lazy=True)
     def get_id(self):
         return (self.user_id)
     def __str__(self):
@@ -31,10 +32,29 @@ class Member(db.Model, UserMixin):
     full_name = db.Column(db.String(500), nullable=False)
     email = db.Column(db.String(500), nullable=False, unique=True)
     phone = db.Column(db.Integer, nullable=False, unique=True)
+    receipts = relationship("Receipt", backref="member", lazy=True)
     def get_id(self):
         return (self.user_id)
     def __str__(self):
         return self.full_name
+
+class GoiTap(db.Model):
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(150), nullable=False)
+    duration = db.Column(db.Integer, nullable=False)
+    price = db.Column(Double, nullable=False)
+    description = Column(Text)
+    receipts = relationship("Receipt", backref="package", lazy=True)
+
+class Receipt(db.Model):
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    total_amount = db.Column(Double, nullable=False)
+    member_id=Column(Integer, ForeignKey(Member.user_id), nullable=False)
+    package_id=Column(Integer, ForeignKey(GoiTap.id), nullable=False)
+    staff_id=Column(Integer, ForeignKey(Staff.user_id), nullable=False)
+    created_date = Column(DateTime, default=datetime.now())
+    is_paid=Column(Boolean, default=False)
+
 
 if __name__ == '__main__':
     with app.app_context():
@@ -46,5 +66,10 @@ if __name__ == '__main__':
         u2 = Staff(username="test", password=password, full_name="Nguyen Van B", email="nvb@gmail.com", phone="24680", role=UserRole.ADMIN)
         u3 = Staff(username="test2", password=password, full_name="Nguoi Dung", email="nd@gmail.com", phone="01273", role=UserRole.PT)
         u4 = Member(full_name="Hoi Vien", email="hv@gmail.com", phone="0849")
-        db.session.add_all([u1, u2, u3, u4])
+        p1=GoiTap(name="Gói 1 tháng", duration=1, price=299000)
+        db.session.add_all([u1, u2, u3, u4, p1])
+        db.session.commit()
+        r1 = Receipt(total_amount=299000, member_id=u4.user_id, package_id=p1.id, staff_id=u2.user_id)
+
+        db.session.add(r1)
         db.session.commit()
