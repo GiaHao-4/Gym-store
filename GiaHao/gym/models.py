@@ -71,11 +71,20 @@ class TrainingPlanDetail(db.Model):
     __tablename__ = 'training_plan_detail'
     id = db.Column(db.Integer, primary_key=True)
     plan_id = db.Column(db.Integer, ForeignKey('training_plan.id'), nullable=False)
-    exercise_name = db.Column(db.String(100), nullable=False) # Lưu tên bài tập (VD: Squat)
+    exercise_id = db.Column(db.Integer, ForeignKey('exercise.id'), nullable=False)
+    # Tạo quan hệ để sau này truy xuất tên bài tập dễ dàng: detail.exercise.name
+    exercise = db.relationship('Exercise')
+
     sets = db.Column(db.Integer)
     reps = db.Column(db.Integer)
     weight = db.Column(db.Float)
     rest_time = db.Column(db.Integer)
+
+class Exercise(db.Model):
+    __tablename__ = 'exercise'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    muscle_group = db.Column(db.String(50))
 
 
 if __name__ == '__main__':

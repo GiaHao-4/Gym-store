@@ -1,5 +1,5 @@
 from datetime import datetime
-from models import db, Member, TrainingPlan, TrainingPlanDetail
+from models import db, Member, TrainingPlan, TrainingPlanDetail, Exercise
 from enum import member
 
 from flask import Flask, render_template, redirect, request, flash, url_for
@@ -46,10 +46,12 @@ def logout_by_user():
 
 @app.route('/addplan', methods=['GET', 'POST'])
 def addplan():
+    exercises = Exercise.query.all()
+
     if request.method == 'GET':
         # Lấy danh sách hội viên để đổ vào thẻ <select>
         members = Member.query.all()
-        return render_template('pt/addplan.html', members=members)
+        return render_template('pt/addplan.html', members=members, exercises=exercises)
 
     if request.method == 'POST':
         try:
@@ -79,7 +81,7 @@ def addplan():
             db.session.flush()  # flush để database tạo ID cho new_plan ngay lập tức (dù chưa commit)
 
             # 3. Lấy dữ liệu phần Danh sách bài tập (Dạng mảng list)
-            ex_names = request.form.getlist(
+            ex_ids = request.form.getlist(
                 'exercise_id[]')  # Lưu ý: HTML bạn đặt là exercise_id[] nhưng value là tên viết tắt
             sets_list = request.form.getlist('sets[]')
             reps_list = request.form.getlist('reps[]')
@@ -87,11 +89,13 @@ def addplan():
             rests_list = request.form.getlist('rest[]')
 
             # 4. Duyệt qua từng dòng và lưu vào TrainingPlanDetail (Bảng con)
-            for i in range(len(ex_names)):
+            for i in range(len(ex_ids)):
+                if not ex_ids[i]: continue
+
                 detail = TrainingPlanDetail(
                     plan_id=new_plan.id,  # Lấy ID của kế hoạch vừa tạo ở trên
-                    exercise_name=ex_names[i],
-                    sets=int(sets_list[i]),
+                    exercise_id=int(ex_ids[i]),
+                    sets=int(sets_list[i]) if sets_list[i] else 0,
                     reps=int(reps_list[i]),
                     weight=float(weights_list[i]) if weights_list[i] else 0,
                     rest_time=int(rests_list[i])

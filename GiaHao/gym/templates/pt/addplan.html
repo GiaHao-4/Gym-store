@@ -27,6 +27,7 @@
             {% endfor %}
         {% endif %}
     {% endwith %}
+
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0"><i class="fas fa-dumbbell me-2"></i>Lập Kế Hoạch Tập Luyện Mới</h5>
@@ -85,15 +86,15 @@
                         <tr>
                             <td>
                                 <select class="form-select form-select-sm" name="exercise_id[]">
-                                    <option value="sq">Squat (Gánh tạ)</option>
-                                    <option value="bp">Bench Press (Đẩy ngực)</option>
-                                    <option value="dl">Deadlift</option>
+                                    <option value="">-- Chọn bài --</option>
+                                    {% for ex in exercises %}
+                                        <option value="{{ ex.id }}">{{ ex.name }}</option>
+                                    {% endfor %}
                                 </select>
                             </td>
                             <td><input type="number" class="form-control form-control-sm" name="sets[]" value="4"></td>
                             <td><input type="number" class="form-control form-control-sm" name="reps[]" value="12"></td>
-                            <td><input type="number" class="form-control form-control-sm" name="weight[]"
-                                       placeholder="Kg"></td>
+                            <td><input type="number" class="form-control form-control-sm" name="weight[]" placeholder="Kg"></td>
                             <td><input type="number" class="form-control form-control-sm" name="rest[]" value="60"></td>
                             <td class="text-center">
                                 <button type="button" class="btn btn-outline-danger btn-sm btn-remove">
@@ -114,21 +115,30 @@
     </div>
 </div>
 
+<div id="exerciseOptions" style="display: none;">
+    <option value="">-- Chọn bài --</option>
+    {% for ex in exercises %}
+        <option value="{{ ex.id }}">{{ ex.name }}</option>
+    {% endfor %}
+</div>
+
 <script>
     // 1. Bắt sự kiện nút "Thêm bài tập"
     document.getElementById('btnAddRow').addEventListener('click', function() {
         // Lấy thẻ tbody
         const tableBody = document.querySelector('#exerciseTable tbody');
 
-        // Tạo một dòng tr mới (Copy nội dung HTML của dòng mẫu)
+        // Lấy nội dung options từ thẻ ẩn bên trên (id="exerciseOptions")
+        const optionsHTML = document.getElementById('exerciseOptions').innerHTML;
+
+        // Tạo một dòng tr mới
         const newRow = document.createElement('tr');
+
+        // Gán HTML cho dòng mới, sử dụng optionsHTML ở phần select
         newRow.innerHTML = `
             <td>
                 <select class="form-select form-select-sm" name="exercise_id[]">
-                    <option value="sq">Squat (Gánh tạ)</option>
-                    <option value="bp">Bench Press (Đẩy ngực)</option>
-                    <option value="dl">Deadlift</option>
-                    <option value="pu">Pull up (Hít xà)</option>
+                    ${optionsHTML}
                 </select>
             </td>
             <td><input type="number" class="form-control form-control-sm" name="sets[]" value="3"></td>
@@ -136,7 +146,7 @@
             <td><input type="number" class="form-control form-control-sm" name="weight[]" placeholder="Kg"></td>
             <td><input type="number" class="form-control form-control-sm" name="rest[]" value="60"></td>
             <td class="text-center">
-                <button type="button" class="btn btn-outline-danger btn-sm btn-remove" onclick="removeRow(this)">
+                <button type="button" class="btn btn-outline-danger btn-sm btn-remove">
                     <i class="fas fa-trash-alt"></i>
                 </button>
             </td>
@@ -146,26 +156,17 @@
         tableBody.appendChild(newRow);
     });
 
-    // 2. Hàm xóa dòng (được gọi ở sự kiện onclick trong HTML trên)
-    function removeRow(button) {
-        // Tìm thẻ tr cha của cái nút vừa bấm và xóa nó đi
-        button.closest('tr').remove();
-    }
-
-    // 3. Xử lý nút xóa cho dòng đầu tiên
-    // (Dùng Event Delegation cho body để xử lý cả những nút có sẵn từ đầu)
+    // 2. Xử lý nút xóa (Dùng Event Delegation cho cả dòng cũ và mới)
     document.body.addEventListener('click', function(event) {
-        if (event.target.closest('.btn-remove')) {
-            const btn = event.target.closest('.btn-remove');
-            const rowCount = document.querySelectorAll('#exerciseTable tbody tr').length;
+        // Kiểm tra xem cái được click có phải là nút xóa (.btn-remove) hoặc icon thùng rác bên trong nó không
+        const btn = event.target.closest('.btn-remove');
 
-            // Nếu nút đó không có onclick="removeRow(this)" nghĩa là dòng đầu tiên
-            if (!btn.getAttribute('onclick')) {
-                 if(rowCount > 1) {
-                    btn.closest('tr').remove();
-                } else {
-                    alert("Phải có ít nhất một bài tập!");
-                }
+        if (btn) {
+            const rowCount = document.querySelectorAll('#exerciseTable tbody tr').length;
+            if(rowCount > 1) {
+                btn.closest('tr').remove();
+            } else {
+                alert("Phải có ít nhất một bài tập!");
             }
         }
     });
