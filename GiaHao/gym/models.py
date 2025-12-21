@@ -56,6 +56,28 @@ class Receipt(db.Model):
     is_paid=Column(Boolean, default=False)
 
 
+class TrainingPlan(db.Model):
+    __tablename__ = 'training_plan'
+    id = db.Column(db.Integer, primary_key=True)
+    member_id = db.Column(db.Integer, ForeignKey('member.user_id'), nullable=False)  # Link với bảng Member
+    training_date = db.Column(db.Date, nullable=False)
+    training_time = db.Column(db.Time, nullable=False)
+    note = db.Column(db.String(255))
+
+    # Quan hệ để lấy danh sách bài tập con
+    details = db.relationship('TrainingPlanDetail', backref='plan', lazy=True)
+
+class TrainingPlanDetail(db.Model):
+    __tablename__ = 'training_plan_detail'
+    id = db.Column(db.Integer, primary_key=True)
+    plan_id = db.Column(db.Integer, ForeignKey('training_plan.id'), nullable=False)
+    exercise_name = db.Column(db.String(100), nullable=False) # Lưu tên bài tập (VD: Squat)
+    sets = db.Column(db.Integer)
+    reps = db.Column(db.Integer)
+    weight = db.Column(db.Float)
+    rest_time = db.Column(db.Integer)
+
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
