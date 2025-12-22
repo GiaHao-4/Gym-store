@@ -164,7 +164,7 @@ def delete_exercise(id):
         db.session.commit()
         flash('Đã xóa bài tập!', 'success')
     except Exception as e:
-        flash('Lỗi khi xóa!', 'danger')
+        flash('Bài tập hiện đang được thêm trong lịch tập! Bạn không thể xóa!', 'danger')
 
     return redirect(url_for('list_exercises'))
 
