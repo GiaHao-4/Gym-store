@@ -78,11 +78,9 @@ def addplan():
                 note=note
             )
             db.session.add(new_plan)
-            db.session.flush()  # flush để database tạo ID cho new_plan ngay lập tức (dù chưa commit)
-
+            db.session.flush()
             # 3. Lấy dữ liệu phần Danh sách bài tập (Dạng mảng list)
-            ex_ids = request.form.getlist(
-                'exercise_id[]')  # Lưu ý: HTML bạn đặt là exercise_id[] nhưng value là tên viết tắt
+            ex_ids = request.form.getlist('exercise_id[]')
             sets_list = request.form.getlist('sets[]')
             reps_list = request.form.getlist('reps[]')
             weights_list = request.form.getlist('weight[]')
@@ -113,6 +111,62 @@ def addplan():
             flash(f'Có lỗi xảy ra: {str(e)}', 'danger')
             return redirect(url_for('addplan'))
 
+@app.route('/exercise')
+def list_exercises():
+    # Lấy toàn bộ bài tập từ DB
+    all_exercises = Exercise.query.all()
+    return render_template('pt/exercisemanagement.html', exercises=all_exercises)
+
+
+@app.route('/exercises/add', methods=['POST'])
+def add_exercise():
+    if request.method == 'POST':
+        try:
+            new_ex = Exercise(
+                name=request.form['name'],
+                muscle_group=request.form['muscle_group'],
+                video_link=request.form['video_link'],
+                description=request.form['description']
+            )
+            db.session.add(new_ex)
+            db.session.commit()
+            flash('Thêm bài tập thành công!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Lỗi: {str(e)}', 'danger')
+
+    return redirect(url_for('list_exercises'))
+
+
+@app.route('/exercises/edit/<int:id>', methods=['POST'])
+def edit_exercise(id):
+    ex = Exercise.query.get_or_404(id)
+    if request.method == 'POST':
+        try:
+            ex.name = request.form['name']
+            ex.muscle_group = request.form['muscle_group']
+            ex.video_link = request.form['video_link']
+            ex.description = request.form['description']
+
+            db.session.commit()
+            flash('Cập nhật thành công!', 'success')
+        except Exception as e:
+            flash(f'Lỗi cập nhật: {str(e)}', 'danger')
+
+    return redirect(url_for('list_exercises'))
+
+
+@app.route('/exercises/delete/<int:id>', methods=['POST'])
+def delete_exercise(id):
+    ex = Exercise.query.get_or_404(id)
+    try:
+        db.session.delete(ex)
+        db.session.commit()
+        flash('Đã xóa bài tập!', 'success')
+    except Exception as e:
+        flash('Lỗi khi xóa!', 'danger')
+
+    return redirect(url_for('list_exercises'))
 
 @login.user_loader
 def get_user(id):

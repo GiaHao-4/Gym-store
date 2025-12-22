@@ -1,0 +1,214 @@
+{% extends "layout/base.html" %}
+{% block title %}Quản lý danh sách bài tập{% endblock %}
+
+{% block css %}
+    <style>
+        .card { box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); }
+        .table-action-btn { margin-right: 5px; }
+        .video-link-icon { color: #dc3545; font-size: 1.2rem; }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary"><i class="bi bi-collection-play me-2"></i>Quản lý danh sách bài tập</h2>
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exerciseModal"
+                onclick="prepareModalForAdd()">
+            <i class="bi bi-plus-lg me-1"></i> Thêm bài tập mới
+        </button>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle mb-0">
+                    <thead class="table-dark">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Tên bài tập</th>
+                        <th scope="col">Nhóm cơ</th>
+                        <th scope="col">Mô tả ngắn</th>
+                        <th scope="col" class="text-center">Video</th>
+                        <th scope="col" class="text-center">Hành động</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for ex in exercises %}
+                    <tr>
+                        <th scope="row">{{ loop.index }}</th>
+                        <td>{{ ex.name }}</td>
+                        <td><span class="badge bg-primary">{{ ex.muscle_group }}</span></td>
+                        <td>{{ ex.description }}</td>
+                        <td class="text-center">
+                            {% if ex.video_link %}
+                            <a href="{{ ex.video_link }}" target="_blank" class="video-link-icon">
+                                <i class="bi bi-youtube"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-outline-primary table-action-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#exerciseModal"
+                                    onclick="prepareModalForEdit('{{ ex.id }}', '{{ ex.name }}', '{{ ex.muscle_group }}', '{{ ex.video_link }}', '{{ ex.description }}')">
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+
+                            <button class="btn btn-sm btn-outline-danger table-action-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#deleteConfirmModal"
+                                    onclick="prepareDelete('{{ ex.id }}', '{{ ex.name }}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-3">Chưa có bài tập nào. Hãy thêm mới!</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer clearfix">
+            <ul class="pagination pagination-sm m-0 float-end">
+                <li class="page-item disabled"><a class="page-link" href="#">«</a></li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">»</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="exerciseModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="exerciseModalLabel">Thêm bài tập mới</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form id="exerciseForm" method="POST" action="{{ url_for('add_exercise') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="exerciseName" class="form-label fw-bold">Tên bài tập <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="exerciseName" name="name" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="muscleGroup" class="form-label fw-bold">Nhóm cơ tác động <span class="text-danger">*</span></label>
+                        <select class="form-select" id="muscleGroup" name="muscle_group" required>
+                            <option value="" selected disabled>Chọn nhóm cơ chính...</option>
+                            <option value="Ngực">Ngực (Chest)</option>
+                            <option value="Lưng">Lưng/Xô (Back/Lats)</option>
+                            <option value="Vai">Vai (Shoulders)</option>
+                            <option value="Tay trước">Tay trước (Biceps)</option>
+                            <option value="Tay sau">Tay sau (Triceps)</option>
+                            <option value="Chân">Chân/Đùi (Legs/Quads)</option>
+                            <option value="Mông">Mông (Glutes)</option>
+                            <option value="Bụng">Bụng (Abs)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="videoLink" class="form-label fw-bold">Link video mẫu</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-link-45deg"></i></span>
+                            <input type="url" class="form-control" id="videoLink" name="video_link" placeholder="https://youtube.com...">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label fw-bold">Mô tả</label>
+                        <textarea class="form-control" id="description" name="description" rows="4"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Lưu bài tập</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Xác nhận xóa</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc chắn muốn xóa bài tập <strong id="deleteNameText">...</strong> không?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+
+                <form id="deleteForm" method="POST" action="">
+                    <button type="submit" class="btn btn-danger">Có, xóa ngay</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // 1. Chuẩn bị Modal THÊM MỚI
+    function prepareModalForAdd() {
+        // Đổi tiêu đề
+        document.getElementById('exerciseModalLabel').innerText = "Thêm bài tập mới";
+        // Reset form rỗng
+        document.getElementById('exerciseForm').reset();
+        // Set action của form về route 'add'
+        document.getElementById('exerciseForm').action = "{{ url_for('add_exercise') }}";
+    }
+
+    // 2. Chuẩn bị Modal SỬA (Đổ dữ liệu cũ vào)
+    function prepareModalForEdit(id, name, muscle, video, desc) {
+        // Đổi tiêu đề
+        document.getElementById('exerciseModalLabel').innerText = "Cập nhật bài tập";
+
+        // Điền dữ liệu vào ô input
+        document.getElementById('exerciseName').value = name;
+        document.getElementById('muscleGroup').value = muscle;
+
+        // Xử lý video link (nếu là None thì để chuỗi rỗng)
+        document.getElementById('videoLink').value = (video && video !== 'None') ? video : '';
+        document.getElementById('description').value = (desc && desc !== 'None') ? desc : '';
+
+        // QUAN TRỌNG: Cập nhật action của form để gửi đến route 'edit'
+        // Chúng ta nối chuỗi đường dẫn edit cơ bản + id
+        var baseEditUrl = "{{ url_for('edit_exercise', id=0) }}"; // Lấy link mẫu có id=0
+        var realEditUrl = baseEditUrl.replace('0', id);           // Thay 0 bằng id thật
+        document.getElementById('exerciseForm').action = realEditUrl;
+    }
+
+    // 3. Chuẩn bị Modal XÓA
+    function prepareDelete(id, name) {
+        // Hiển thị tên bài tập cần xóa
+        document.getElementById('deleteNameText').innerText = name;
+
+        // Cập nhật action cho form xóa
+        var baseDeleteUrl = "{{ url_for('delete_exercise', id=0) }}";
+        var realDeleteUrl = baseDeleteUrl.replace('0', id);
+        document.getElementById('deleteForm').action = realDeleteUrl;
+    }
+</script>
+{% endblock %}
