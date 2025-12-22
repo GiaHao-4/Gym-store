@@ -113,9 +113,14 @@ def addplan():
 
 @app.route('/exercise')
 def list_exercises():
-    # Lấy toàn bộ bài tập từ DB
-    all_exercises = Exercise.query.all()
-    return render_template('pt/exercisemanagement.html', exercises=all_exercises)
+    page = request.args.get('page', 1, type=int)
+    page_size = 5
+    pagination_obj = Exercise.query.order_by(Exercise.id.desc()).paginate(
+        page=page,
+        per_page=page_size,
+        error_out=False
+    )
+    return render_template('pt/exercisemanagement.html', exercises=pagination_obj)
 
 
 @app.route('/exercises/add', methods=['POST'])
