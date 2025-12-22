@@ -1,0 +1,194 @@
+{% extends "layout/base.html" %}
+{% block title %}Lịch tập hội viên{% endblock %}
+
+{% block css %}
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+<style>
+    #calendar {
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        min-height: 800px;
+    }
+
+    /* CSS trạng thái - Phải khớp với className trả về từ Python */
+    .fc-event-completed {
+        background-color: #198754 !important; /* Xanh lá */
+        border-color: #198754 !important;
+    }
+    .fc-event-pending {
+        background-color: #0d6efd !important; /* Xanh dương */
+        border-color: #0d6efd !important;
+    }
+    .fc-event-cancelled {
+        background-color: #dc3545 !important; /* Đỏ */
+        border-color: #dc3545 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3 align-items-center">
+        <div class="col-md-6">
+            <h2 class="text-primary"><i class="bi bi-calendar-week me-2"></i>Lịch trình huấn luyện</h2>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body py-2">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-auto">
+                            <label class="fw-bold"><i class="bi bi-funnel"></i> Lọc theo hội viên:</label>
+                        </div>
+                        <div class="col">
+                            <select class="form-select form-select-sm" id="memberFilter" onchange="filterCalendar()">
+                                <option value="all" selected>-- Tất cả hội viên --</option>
+                                {% for m in members %}
+                                <option value="{{ m.user_id }}">{{ m.full_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id='calendar'></div>
+</div>
+
+<div class="modal fade" id="eventDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title"><i class="bi bi-info-circle me-2"></i>Chi tiết buổi tập</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="fw-bold text-muted small">HỘI VIÊN</label>
+                    <h5 id="detailMemberName" class="text-primary">Loading...</h5>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="fw-bold text-muted small">THỜI GIAN</label>
+                        <div id="detailTime">...</div>
+                    </div>
+                    <div class="col-6">
+                        <label class="fw-bold text-muted small">TRẠNG THÁI</label>
+                        <div id="detailStatus">...</div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="fw-bold text-muted small">NỘI DUNG BÀI TẬP</label>
+                    <ul class="list-group list-group-flush" id="detailExercises">
+                        </ul>
+                </div>
+
+                <div class="mb-3">
+                    <label class="fw-bold text-muted small">GHI CHÚ CỦA PT</label>
+                    <p id="detailNote" class="fst-italic text-muted">Không có ghi chú.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary">Cập nhật trạng thái</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar');
+
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'timeGridWeek',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            locale: 'vi',
+            buttonText: { today: 'Hôm nay', month: 'Tháng', week: 'Tuần', day: 'Ngày' },
+            slotMinTime: "06:00:00",
+            slotMaxTime: "22:00:00",
+            allDaySlot: false,
+
+            // --- ĐÂY LÀ PHẦN QUAN TRỌNG NHẤT BẠN ĐANG THIẾU ---
+            events: {
+                url: '/api/schedule-events', // Gọi API thật
+                method: 'GET',
+                extraParams: function() {
+                    return {
+                        member_id: document.getElementById('memberFilter').value,
+                        _: new Date().getTime() // Tránh lỗi cache
+                    };
+                },
+                failure: function() {
+                    console.log('Lỗi tải lịch!'); // Ghi lỗi ngầm vào Console thay vì hiện Alert
+                }
+            },
+            // --------------------------------------------------
+
+            eventClick: function(info) {
+                var eventObj = info.event;
+                var props = eventObj.extendedProps;
+
+                // Điền thông tin vào Modal
+                document.getElementById('detailMemberName').innerText = props.memberName;
+
+                var timeStr = eventObj.start.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+                if (eventObj.end) {
+                    timeStr += " - " + eventObj.end.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+                }
+                document.getElementById('detailTime').innerText = timeStr;
+
+                // Xử lý trạng thái
+                var statusHTML = '';
+                if(props.status === 'completed') {
+                    statusHTML = '<span class="badge bg-success">Đã hoàn thành</span>';
+                } else if (props.status === 'cancelled') {
+                    statusHTML = '<span class="badge bg-danger">Đã hủy</span>';
+                } else {
+                    statusHTML = '<span class="badge bg-primary">Sắp tới / Chưa tập</span>';
+                }
+                document.getElementById('detailStatus').innerHTML = statusHTML;
+
+                // Xử lý bài tập
+                var exList = document.getElementById('detailExercises');
+                exList.innerHTML = '';
+                if (props.exercises && props.exercises.length > 0) {
+                    props.exercises.forEach(function(ex) {
+                        var li = document.createElement('li');
+                        li.className = 'list-group-item px-0';
+                        li.innerHTML = '<i class="bi bi-check2-circle text-primary me-2"></i> ' + ex;
+                        exList.appendChild(li);
+                    });
+                } else {
+                    exList.innerHTML = '<li class="text-muted fst-italic">Chưa có bài tập chi tiết</li>';
+                }
+
+                document.getElementById('detailNote').innerText = props.note || "Không có ghi chú.";
+
+                var myModal = new bootstrap.Modal(document.getElementById('eventDetailModal'));
+                myModal.show();
+            }
+        });
+
+        calendar.render();
+        window.calendarApi = calendar; // Lưu biến để dùng ở ngoài
+    });
+
+    // --- HÀM LỌC CHUẨN (KHÔNG CÒN ALERT) ---
+    function filterCalendar() {
+        if (window.calendarApi) {
+            // Lệnh này bắt buộc lịch phải gọi lại API /api/schedule-events
+            window.calendarApi.refetchEvents();
+        }
+    }
+</script>
+{% endblock %}

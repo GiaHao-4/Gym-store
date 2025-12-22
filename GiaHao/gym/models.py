@@ -60,9 +60,13 @@ class TrainingPlan(db.Model):
     __tablename__ = 'training_plan'
     id = db.Column(db.Integer, primary_key=True)
     member_id = db.Column(db.Integer, ForeignKey('member.user_id'), nullable=False)  # Link với bảng Member
+    member = db.relationship('Member', backref='training_plans', lazy=True)
+
     training_date = db.Column(db.Date, nullable=False)
     training_time = db.Column(db.Time, nullable=False)
     note = db.Column(db.String(255))
+
+    status = db.Column(db.String(20), default='pending')
 
     # Quan hệ để lấy danh sách bài tập con
     details = db.relationship('TrainingPlanDetail', backref='plan', lazy=True)

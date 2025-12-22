@@ -1,8 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from models import db, Member, TrainingPlan, TrainingPlanDetail, Exercise
 from enum import member
 
-from flask import Flask, render_template, redirect, request, flash, url_for
+from flask import Flask, render_template, redirect, request, flash, url_for, jsonify
 from flask_login import current_user, login_user, logout_user
 
 from gym import dao, login, reception
@@ -111,6 +111,7 @@ def addplan():
             flash(f'Có lỗi xảy ra: {str(e)}', 'danger')
             return redirect(url_for('addplan'))
 
+
 @app.route('/exercise')
 def list_exercises():
     page = request.args.get('page', 1, type=int)
@@ -172,6 +173,87 @@ def delete_exercise(id):
         flash('Bài tập hiện đang được thêm trong lịch tập! Bạn không thể xóa!', 'danger')
 
     return redirect(url_for('list_exercises'))
+
+
+@app.route('/schedule')
+def view_schedule():
+    # Lấy danh sách hội viên để đổ vào Dropdown lọc
+    members = Member.query.all()
+    return render_template('pt/schedule.html', members=members)
+
+
+@app.route('/api/schedule-events')
+def get_schedule_events():
+    # FullCalendar gửi lên start và end dạng chuỗi ISO (VD: '2025-12-01T00:00:00')
+    start_str = request.args.get('start')
+    end_str = request.args.get('end')
+    member_filter = request.args.get('member_id')
+
+    # Xử lý chuỗi ngày tháng từ request để query DB
+    # (Vì DB lưu Date riêng, Time riêng nên ta filter theo Date)
+    try:
+        start_date = datetime.fromisoformat(start_str).date()
+        end_date = datetime.fromisoformat(end_str).date()
+    except:
+        return jsonify([])  # Trả về rỗng nếu lỗi ngày tháng
+
+    # Query cơ bản: Lấy theo ngày
+    query = TrainingPlan.query.filter(
+        TrainingPlan.training_date >= start_date,
+        TrainingPlan.training_date <= end_date
+    )
+
+    # Nếu có chọn bộ lọc hội viên
+    if member_filter and member_filter != 'all':
+        try:
+            # Ép kiểu sang số nguyên (int) để so sánh chính xác với Database
+            member_id_int = int(member_filter)
+            query = query.filter(TrainingPlan.member_id == member_id_int)
+        except ValueError:
+            pass
+    plans = query.all()
+
+    events_list = []
+
+    for plan in plans:
+        # 1. Ghép Ngày + Giờ để tạo thành 'start' (datetime)
+        start_dt = datetime.combine(plan.training_date, plan.training_time)
+
+        # 2. Giả định mỗi buổi tập kéo dài 60 phút (Vì DB bạn không có cột end_time)
+        end_dt = start_dt + timedelta(minutes=60)
+
+        # 3. Lấy danh sách bài tập chi tiết
+        exercises_names = []
+        for detail in plan.details:
+            # detail.exercise đã được define trong model của bạn, nên gọi .name được luôn
+            if detail.exercise:
+                exercises_names.append(detail.exercise.name)
+
+        # 4. Xác định màu sắc dựa trên status
+        color_class = 'fc-event-pending'  # Mặc định xanh dương
+        if plan.status == 'completed':
+            color_class = 'fc-event-completed'  # Xanh lá
+        elif plan.status == 'cancelled':
+            color_class = 'fc-event-cancelled'  # Đỏ
+
+        # 5. Tạo Dictionary dữ liệu
+        event_dict = {
+            'id': plan.id,
+            'title': f"{plan.member.full_name}",  # Tiêu đề hiển thị trên lịch
+            'start': start_dt.isoformat(),
+            'end': end_dt.isoformat(),
+            'className': color_class,
+            'extendedProps': {
+                'memberName': plan.member.full_name,
+                'status': plan.status if plan.status else 'pending',
+                'exercises': exercises_names,
+                'note': plan.note
+            }
+        }
+        events_list.append(event_dict)
+
+    return jsonify(events_list)
+
 
 @login.user_loader
 def get_user(id):
