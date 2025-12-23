@@ -1,14 +1,17 @@
 from flask import Flask, render_template, redirect, request, session
 from flask_login import current_user, login_user, logout_user
+from flask_mail import Message
 
 from gym import dao, login, reception, db
-from gym import app
+from gym import app, mail
 from gym.models import Member, GoiTap, Receipt
+from datetime import datetime, timedelta
 
 
 @app.route('/')
 def index():
-    return render_template("index.html")
+    packages = GoiTap.query.limit(3).all()
+    return render_template("index.html", packages=packages)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login_my_user():
@@ -106,6 +109,53 @@ def booking_complete():
         receipt = Receipt(total_amount=package.price, member_id=user_id, package_id=package_id, staff_id=None, is_paid=True)
         db.session.add(receipt)
         db.session.commit()
+        try:
+            expire_date = datetime.now() + timedelta(days=package.duration)
+            expire_str = expire_date.strftime("%d/%m/%Y")
+            created_str = datetime.now().strftime("%d/%m/%Y %H:%M")
+            user_email = info['email'] if booking_type == 'NEW' else Member.query.get(user_id).email
+            user_name = info['name'] if booking_type == 'NEW' else Member.query.get(user_id).full_name
+            subject = "XÁC NHẬN THANH TOÁN THÀNH CÔNG - MUSCLE GYM"
+            msg = Message(subject, recipients=[user_email])
+            msg.html = f"""
+                        <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd;">
+                            <h2 style="color: #28a745;">THANH TOÁN THÀNH CÔNG!</h2>
+                            <p>Xin chào <strong>{user_name}</strong>,</p>
+                            <p>Cảm ơn bạn đã đăng ký dịch vụ tại Muscle Gym. Dưới đây là thông tin hóa đơn của bạn:</p>
+    
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                                <tr style="background-color: #f8f9fa;">
+                                    <td style="padding: 10px; border: 1px solid #ddd;">Gói tập:</td>
+                                    <td style="padding: 10px; border: 1px solid #ddd;"><strong>{package.name}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 10px; border: 1px solid #ddd;">Tổng tiền:</td>
+                                    <td style="padding: 10px; border: 1px solid #ddd; color: #d9534f;">
+                                        <strong>{"{:,.0f}".format(package.price)} VNĐ</strong>
+                                    </td>
+                                </tr>
+                                <tr style="background-color: #f8f9fa;">
+                                    <td style="padding: 10px; border: 1px solid #ddd;">Ngày đăng ký:</td>
+                                    <td style="padding: 10px; border: 1px solid #ddd;">{created_str}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 10px; border: 1px solid #ddd;">Ngày hết hạn:</td>
+                                    <td style="padding: 10px; border: 1px solid #ddd; color: #007bff; font-weight: bold;">
+                                        {expire_str}
+                                    </td>
+                                </tr>
+                            </table>
+    
+                            <p style="margin-top: 20px;">Vui lòng xuất trình email này tại quầy lễ tân để nhận thẻ tập.</p>
+                            <p>Chúc bạn có những giờ phút tập luyện hiệu quả!</p>
+                            <hr>
+                            <small>Muscle Gym System - Auto Reply</small>
+                        </div>
+                        """
+            mail.send(msg)
+            print("Đã gửi email thành công!")
+        except Exception as e:
+            print(f"Lỗi gửi email: {str(e)}")
         session.clear()
         return render_template('client/success.html')
     except Exception as e:
