@@ -14,47 +14,54 @@ class UserRole(RoleEnum):
     THUNGAN=4
 
 class Staff(db.Model, UserMixin):
+    __table_args__ = {'extend_existing': True}
     user_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(50), nullable=False, unique=True)
     password = db.Column(db.String(50), nullable=False)
     full_name = db.Column(db.String(500), nullable=False)
     email = db.Column(db.String(500), nullable=False, unique=True)
-    phone = db.Column(db.Integer, nullable=False, unique=True)
+    phone = db.Column(db.String(20), nullable=False, unique=True)
     role=db.Column(Enum(UserRole))
-    receipts=relationship("Receipt", backref="staff", lazy=True)
+    # receipts=relationship("gym.models.Receipt", backref="staff", lazy=True)
     def get_id(self):
         return (self.user_id)
     def __str__(self):
         return self.full_name
 
 class Member(db.Model, UserMixin):
+    __table_args__ = {'extend_existing': True}
     user_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     full_name = db.Column(db.String(500), nullable=False)
     email = db.Column(db.String(500), nullable=False, unique=True)
-    phone = db.Column(db.Integer, nullable=False, unique=True)
-    receipts = relationship("Receipt", backref="member", lazy=True)
+    phone = db.Column(db.String(20), nullable=False, unique=True)
+    # receipts = relationship("gym.models.Receipt", backref="member", lazy=True)
     def get_id(self):
         return (self.user_id)
     def __str__(self):
         return self.full_name
 
 class GoiTap(db.Model):
+    __table_args__ = {'extend_existing': True}
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(150), nullable=False)
     duration = db.Column(db.Integer, nullable=False)
     price = db.Column(Double, nullable=False)
     description = Column(Text)
-    receipts = relationship("Receipt", backref="package", lazy=True)
+    # receipts = relationship("gym.models.Receipt", backref="package", lazy=True)
 
 class Receipt(db.Model):
+    __table_args__ = {'extend_existing': True}
     id = Column(Integer, primary_key=True, autoincrement=True)
     total_amount = db.Column(Double, nullable=False)
     member_id=Column(Integer, ForeignKey(Member.user_id), nullable=False)
     package_id=Column(Integer, ForeignKey(GoiTap.id), nullable=False)
-    staff_id=Column(Integer, ForeignKey(Staff.user_id), nullable=False)
+    staff_id=Column(Integer, ForeignKey(Staff.user_id), nullable=True)
     created_date = Column(DateTime, default=datetime.now())
     is_paid=Column(Boolean, default=False)
 
+Staff.sales_made = relationship(Receipt, backref='staff', lazy=True)
+Member.my_receipts = relationship(Receipt, backref='member', lazy=True)
+GoiTap.receipts = relationship(Receipt, backref='package', lazy=True)
 
 if __name__ == '__main__':
     with app.app_context():

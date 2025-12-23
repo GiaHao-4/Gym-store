@@ -1,0 +1,11 @@
+{% extends 'layout/base.html' %}
+{% block content %}
+<div class="container mt-5 text-center" style="max-width: 500px;">
+    <h3>Bắt đầu hành trình tập luyện</h3>
+    <p>Nhập số điện thoại để chúng tôi kiểm tra thông tin của bạn</p>
+    <form method="post">
+        <input type="text" name="phone" class="form-control mb-3" placeholder="Số điện thoại của bạn..." required>
+        <button type="submit" class="btn btn-primary w-100">Tiếp tục <i class="fas fa-arrow-right"></i></button>
+    </form>
+</div>
+{% endblock %}
