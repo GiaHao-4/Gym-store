@@ -1,0 +1,123 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary"><i class="fas fa-box"></i> Quản Lý Gói Tập</h2>
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addPackageModal">
+            <i class="fas fa-plus-circle"></i> Thêm Gói Tập Mới
+        </button>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên Gói</th>
+                        <th>Thời Hạn (Tháng)</th>
+                        <th>Giá Tiền (VNĐ)</th>
+                        <th>Mô Tả</th>
+                        <th>Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in packages %}
+                    <tr>
+                        <td>{{ p.id }}</td>
+                        <td><strong>{{ p.name }}</strong></td>
+                        <td>{{ p.duration }}</td>
+                        <td class="text-danger fw-bold">{{ "{:,.0f}".format(p.price) }} đ</td>
+                        <td>{{ p.description or '' }}</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm"
+                                    onclick="editPackage('{{ p.id }}', '{{ p.name }}', '{{ p.price }}')"
+                                    data-bs-toggle="modal" data-bs-target="#editPackageModal">
+                                <i class="fas fa-edit"></i> Sửa Giá
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addPackageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('manage_packages') }}">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">Thêm Gói Tập Mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="action" value="add">
+                    <div class="mb-3">
+                        <label class="form-label">Tên gói tập</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Thời hạn (Tháng)</label>
+                        <input type="number" name="duration" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Giá tiền</label>
+                        <input type="number" name="price" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mô tả</label>
+                        <textarea name="description" class="form-control"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-success">Lưu lại</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editPackageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('manage_packages') }}">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Cập Nhật Gói Tập</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="action" value="edit">
+                    <input type="hidden" name="id" id="edit-id">
+
+                    <div class="mb-3">
+                        <label class="form-label">Tên gói tập</label>
+                        <input type="text" name="name" id="edit-name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Giá tiền mới (VNĐ)</label>
+                        <input type="number" name="price" id="edit-price" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Cập Nhật</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Hàm JavaScript để đổ dữ liệu vào Modal khi nhấn nút Sửa
+function editPackage(id, name, price) {
+    document.getElementById('edit-id').value = id;
+    document.getElementById('edit-name').value = name;
+    document.getElementById('edit-price').value = price;
+}
+</script>
+
+{% endblock %}

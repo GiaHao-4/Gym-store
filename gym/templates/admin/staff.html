@@ -1,0 +1,144 @@
+{% extends 'layout/base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4 text-primary fw-bold">QUẢN LÝ NHÂN VIÊN</h2>
+
+    <button class="btn btn-primary mb-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#addStaffModal">
+        <i class="fas fa-user-plus"></i> Thêm nhân viên mới
+    </button>
+
+    <div class="card shadow border-0">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Họ tên</th>
+                        <th>Username</th>
+                        <th>Vai trò</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in staff_list %}
+                    <tr>
+                        <td class="align-middle">{{ s.full_name }}</td>
+                        <td class="align-middle">{{ s.username }}</td>
+                        <td class="align-middle">
+                            <span class="badge bg-info text-dark">{{ s.role.name }}</span>
+                        </td>
+                        <td class="align-middle">
+                            {% if s.is_active %}
+                                <span class="text-success fw-bold"><i class="fas fa-check-circle"></i> Đang hoạt động</span>
+                            {% else %}
+                                <span class="text-danger fw-bold"><i class="fas fa-ban"></i> Đã khóa</span>
+                            {% endif %}
+                        </td>
+                        <td class="align-middle">
+                            <button class="btn btn-sm btn-warning shadow-sm px-3" data-bs-toggle="modal" data-bs-target="#editModal{{ s.user_id }}">
+                                <i class="fas fa-edit"></i> Sửa
+                            </button>
+
+                            <button type="button"
+                                    onclick="toggleStaff({{ s.user_id }})"
+                                    class="btn btn-sm {{ 'btn-danger' if s.is_active else 'btn-success' }} px-3 shadow-sm">
+                                {{ 'Khóa' if s.is_active else 'Mở khóa' }}
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% for s in staff_list %}
+<div class="modal fade" id="editModal{{ s.user_id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="post" action="{{ url_for('manage_staff') }}" class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title fw-bold">Chỉnh sửa: {{ s.full_name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-start">
+                <input type="hidden" name="action" value="edit">
+                <input type="hidden" name="staff_id" value="{{ s.user_id }}">
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Họ tên</label>
+                    <input type="text" name="name" value="{{ s.full_name }}" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Email</label>
+                    <input type="email" name="email" value="{{ s.email }}" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Số điện thoại</label>
+                    <input type="text" name="phone" value="{{ s.phone }}" class="form-control" required>
+                </div>
+                <div class="mb-3 text-start">
+                    <label class="form-label fw-bold">Vai trò</label>
+                    <select name="role" class="form-select shadow-sm">
+                        <option value="LETAN" {{ 'selected' if s.role and s.role.name == 'LETAN' else '' }}>Lễ Tân</option>
+                        <option value="PT" {{ 'selected' if s.role and s.role.name == 'PT' else '' }}>Huấn luyện viên (PT)</option>
+                        <option value="THUNGAN" {{ 'selected' if s.role and s.role.name == 'THUNGAN' else '' }}>Thu Ngân</option>
+                        <option value="ADMIN" {{ 'selected' if s.role and s.role.name == 'ADMIN' else '' }}>Quản Trị Viên</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="submit" class="btn btn-primary px-4">Lưu thay đổi</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endfor %}
+
+<div class="modal fade" id="addStaffModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="post" action="{{ url_for('manage_staff') }}" class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">Thêm nhân viên mới</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="action" value="add">
+                <div class="mb-3"><input type="text" name="name" class="form-control" placeholder="Họ và tên" required></div>
+                <div class="mb-3"><input type="text" name="username" class="form-control" placeholder="Tên đăng nhập" required></div>
+                <div class="mb-3"><input type="password" name="password" class="form-control" placeholder="Mật khẩu" required></div>
+                <div class="mb-3"><input type="email" name="email" class="form-control" placeholder="Email" required></div>
+                <div class="mb-3"><input type="text" name="phone" class="form-control" placeholder="Số điện thoại" required></div>
+                <div class="mb-3">
+                    <select name="role" class="form-select">
+                        <option value="LETAN">Lễ Tân</option>
+                        <option value="PT">Huấn luyện viên (PT)</option>
+                        <option value="THUNGAN">Thu Ngân</option>
+                        <option value="ADMIN">Quản Trị Viên</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="submit" class="btn btn-primary px-4">Lưu nhân viên</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleStaff(staffId) {
+    if (confirm("Xác nhận thay đổi trạng thái nhân viên này?")) {
+        fetch("{{ url_for('manage_staff') }}", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "action=toggle&staff_id=" + staffId
+        }).then(res => {
+            if (res.ok) { location.reload(); }
+            else { alert("Lỗi: Phiên đăng nhập hết hạn hoặc không có quyền."); }
+        }).catch(err => alert("Lỗi kết nối server."));
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<div class="container mt-5 text-center" style="min-height: 60vh; display: flex; align-items: center; justify-content: center;">
+    <div class="card shadow-lg border-0 p-5" style="max-width: 600px; border-radius: 20px;">
+        <div class="mb-4">
+            <i class="fas fa-check-circle text-success" style="font-size: 5rem;"></i>
+        </div>
+        <h2 class="font-weight-bold text-success mb-3">THANH TOÁN THÀNH CÔNG!</h2>
+        <p class="text-muted mb-4">
+            Cảm ơn bạn đã tin tưởng Muscle Gym.<br>
+            Hệ thống đã ghi nhận giao dịch và kích hoạt gói tập cho bạn.
+        </p>
+        
+        <div class="d-grid gap-2">
+            <a href="/" class="btn btn-primary rounded-pill px-5 py-2 font-weight-bold">
+                <i class="fas fa-home"></i> Về Trang Chủ
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

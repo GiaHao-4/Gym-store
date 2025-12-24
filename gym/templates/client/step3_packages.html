@@ -1,0 +1,22 @@
+{% extends 'layout/base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Bước 2: Chọn gói tập phù hợp</h2>
+    <div class="row">
+        {% for p in packages %}
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <h4>{{ p.name }}</h4>
+                    <h2 class="text-primary">{{ "{:,.0f}".format(p.price) }} đ</h2>
+                    <p class="text-muted">{{ p.duration }} ngày</p>
+                    <hr>
+                    <p>{{ p.description }}</p>
+                    <a href="/booking/payment?package_id={{ p.id }}" class="btn btn-outline-primary w-100">Chọn gói này</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
