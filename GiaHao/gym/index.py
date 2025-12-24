@@ -1,8 +1,7 @@
 from flask_mail import Message
-
 from flask import render_template, redirect, request, session, flash, url_for
 from flask_login import current_user, login_user, logout_user, login_required
-from gym import dao, login, db, app, mail
+from gym import dao, login, db, app, mail, reception
 from gym.models import UserRole, Exercises, Regulation, GoiTap, Receipt, Member
 from datetime import datetime, timedelta
 
@@ -323,4 +322,5 @@ def logout_by_user():
 
 
 if __name__ == '__main__':
+    print(app.url_map)
     app.run(debug=True)
