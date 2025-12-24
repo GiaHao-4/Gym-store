@@ -1,0 +1,181 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Quản lý Bài tập - Muscle Gym{% endblock %}
+
+{% block head %}
+{{ super() }}
+<style>
+    :root {
+        --exercise-primary: #1cc88a; /* Màu xanh lá đặc trưng cho sức khỏe */
+        --exercise-secondary: #4e73df;
+        --bg-light: #f8f9fc;
+    }
+    body { background-color: var(--bg-light); }
+
+    .card { border: none; border-radius: 15px; overflow: hidden; }
+    .shadow-hover:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.1) !important; transition: all 0.3s; }
+
+    .table thead th {
+        background-color: var(--exercise-primary);
+        color: white;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        border: none;
+        padding: 15px;
+    }
+
+    .badge-muscle {
+        background-color: #eafaf1;
+        color: var(--exercise-primary);
+        border: 1px solid var(--exercise-primary);
+        font-weight: 600;
+        padding: 5px 12px;
+        border-radius: 50px;
+    }
+
+    .form-control-custom {
+        border: 1px solid #d1d3e2;
+        border-radius: 10px;
+        padding: 10px 15px;
+        transition: border-color 0.2s;
+    }
+    .form-control-custom:focus {
+        border-color: var(--exercise-primary);
+        box-shadow: 0 0 0 0.2rem rgba(28, 200, 138, 0.15);
+    }
+
+    /* Tối ưu hiển thị cho các ô nhập liệu trong bảng khi edit */
+    .table-input {
+        border: 1px solid transparent;
+        background: transparent;
+        transition: all 0.2s;
+    }
+    .table-input:focus {
+        background: white !important;
+        border-color: var(--exercise-primary) !important;
+        box-shadow: 0 0 5px rgba(28, 200, 138, 0.2);
+        outline: none;
+    }
+
+    .btn-action {
+        width: 35px;
+        height: 35px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        border: none;
+    }
+    .btn-edit { background-color: #f6c23e; color: white; }
+    .btn-delete { background-color: #e74a3b; color: white; }
+    .btn-edit:hover { background-color: #dda20a; }
+    .btn-delete:hover { background-color: #be2617; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-5 border-start border-success border-5 ps-3">
+        <div>
+            <h2 class="m-0 text-uppercase fw-bold text-dark">Thư viện Bài tập</h2>
+            <p class="text-muted m-0 small">Quản lý các bài tập theo từng nhóm cơ mục tiêu</p>
+        </div>
+        <div class="d-flex gap-2">
+            <form class="d-flex" action="/admin/exercises" method="get">
+                <input type="text" name="kw" class="form-control form-control-sm rounded-pill px-3" placeholder="Tìm tên bài tập...">
+                <button type="submit" class="btn btn-sm btn-success rounded-pill ms-1 px-3">Tìm</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow-sm shadow-hover">
+                <div class="card-header bg-success text-white py-3">
+                    <h5 class="m-0 fw-bold small"><i class="fas fa-plus-circle me-2"></i>Thêm Bài Tập Mới</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" action="/admin/exercises">
+                        <input type="hidden" name="action" value="add">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Tên bài tập</label>
+                            <input type="text" name="name" class="form-control form-control-custom" placeholder="Vd: Bench Press" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Nhóm cơ chính</label>
+                            <select name="muscle_group" class="form-select form-control-custom">
+                                <option value="Ngực">Ngực (Chest)</option>
+                                <option value="Lưng">Lưng (Back)</option>
+                                <option value="Vai">Vai (Shoulder)</option>
+                                <option value="Tay">Tay (Arms)</option>
+                                <option value="Chân">Chân (Legs)</option>
+                                <option value="Bụng">Bụng (Abs)</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold text-muted">Hướng dẫn kỹ thuật</label>
+                            <textarea name="description" class="form-control form-control-custom" rows="4" placeholder="Nhập hướng dẫn thực hiện..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 fw-bold py-2 shadow-sm rounded-pill">
+                            <i class="fas fa-check-circle me-2"></i>LƯU VÀO HỆ THỐNG
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow-sm shadow-hover">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="ps-4">Nội dung bài tập</th>
+                                    <th>Nhóm cơ</th>
+                                    <th class="text-center pe-4">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for e in exercises %}
+                                <tr>
+                                    <form method="post" action="/admin/exercises">
+                                        <input type="hidden" name="id" value="{{ e.id }}">
+                                        <td class="ps-4 py-3">
+                                            <input type="text" name="name"
+                                                   class="form-control form-control-sm table-input fw-bold p-1 mb-1"
+                                                   value="{{ e.name }}" required>
+                                            <textarea name="description"
+                                                      class="form-control form-control-sm table-input text-muted p-1 small"
+                                                      rows="1" style="resize: vertical;">{{ e.description }}</textarea>
+                                        </td>
+                                        <td>
+                                            <input type="text" name="muscle_group"
+                                                   class="form-control form-control-sm table-input p-1 fw-bold"
+                                                   value="{{ e.muscle_group }}" style="width: 100px;">
+                                        </td>
+                                        <td class="text-center pe-4">
+                                            <div class="d-flex justify-content-center gap-2">
+                                                <button type="submit" name="action" value="edit" class="btn-action btn-edit" title="Lưu thay đổi">
+                                                    <i class="fas fa-save"></i>
+                                                </button>
+                                                <button type="submit" name="action" value="delete" class="btn-action btn-delete"
+                                                        onclick="return confirm('Bạn có chắc muốn xóa bài tập này?')" title="Xóa">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </form>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

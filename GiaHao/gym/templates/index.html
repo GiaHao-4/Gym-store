@@ -1,4 +1,181 @@
-{% extends "layout/base.html" %}
+{% extends 'layout/base.html' %}
+
+{% block title %}Muscle Gym - Trang Chủ{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    <style>
+        /* CSS Riêng cho Trang chủ */
+        .hero-section {
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
+            background-size: cover;
+            background-position: center;
+            height: 85vh;
+            display: flex;
+            align-items: center;
+            justify_content: center;
+            color: white;
+            text-align: center;
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+
+        .gym-card {
+            transition: transform 0.3s;
+            border: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .gym-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .price-tag {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .section-title {
+            text-transform: uppercase;
+            font-weight: 800;
+            margin-bottom: 3rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 50%;
+            height: 3px;
+            background: #007bff;
+            margin: 10px auto 0;
+        }
+    </style>
+{% endblock %}
+
 {% block content %}
-HELLO
+
+<div class="hero-section">
+    <div class="container">
+        <h1 class="display-3 font-weight-bold text-uppercase mb-4" data-aos="fade-up">
+            XÂY DỰNG CƠ THỂ MƠ ƯỚC
+        </h1>
+        <p class="lead mb-5" style="font-size: 1.5rem;">
+            Phòng tập hiện đại - HLV chuyên nghiệp - Môi trường năng động
+        </p>
+
+        {# --- PHẦN LOGIC KIỂM TRA QUYỀN PT --- #}
+        {% if current_user.is_authenticated and current_user.role.name == 'PT' %}
+
+            <div class="d-flex justify-content-center flex-wrap">
+                <a href="/addplan" class="btn btn-warning btn-lg px-4 py-3 rounded-pill font-weight-bold m-2 shadow text-dark">
+                    <i class="fas fa-calendar-plus"></i> Tạo Lịch Tập
+                </a>
+                <a href="/exercise" class="btn btn-info btn-lg px-4 py-3 rounded-pill font-weight-bold m-2 shadow text-white">
+                    <i class="fas fa-dumbbell"></i> Quản Lý Bài Tập
+                </a>
+                <a href="/schedule" class="btn btn-success btn-lg px-4 py-3 rounded-pill font-weight-bold m-2 shadow">
+                    <i class="fas fa-clock"></i> Xem Lịch Trình
+                </a>
+            </div>
+
+        {% else %}
+
+            <a href="/booking" class="btn btn-primary btn-lg px-5 py-3 rounded-pill font-weight-bold shadow">
+                <i class="fas fa-bolt"></i> ĐĂNG KÝ NGAY
+            </a>
+
+        {% endif %}
+        {# --- KẾT THÚC PHẦN LOGIC --- #}
+
+    </div>
+</div>
+
+<div class="container py-5 mt-5">
+    <div class="text-center">
+        <h2 class="section-title text-dark">Tại sao chọn Muscle Gym?</h2>
+    </div>
+    <div class="row text-center mt-4">
+        <div class="col-md-3 mb-4">
+            <div class="p-4 bg-white rounded shadow-sm h-100">
+                <i class="fas fa-dumbbell feature-icon"></i>
+                <h5 class="font-weight-bold">Thiết Bị Hiện Đại</h5>
+                <p class="text-muted">Nhập khẩu 100% từ Châu Âu, đa dạng các nhóm cơ.</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="p-4 bg-white rounded shadow-sm h-100">
+                <i class="fas fa-user-friends feature-icon"></i>
+                <h5 class="font-weight-bold">HLV Tận Tâm</h5>
+                <p class="text-muted">Đội ngũ PT có chứng chỉ quốc tế, nhiệt tình hỗ trợ.</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="p-4 bg-white rounded shadow-sm h-100">
+                <i class="fas fa-shower feature-icon"></i>
+                <h5 class="font-weight-bold">Tiện Nghi Đầy Đủ</h5>
+                <p class="text-muted">Tủ đồ, phòng tắm nóng lạnh, xông hơi miễn phí.</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="p-4 bg-white rounded shadow-sm h-100">
+                <i class="fas fa-clock feature-icon"></i>
+                <h5 class="font-weight-bold">Tự Do Thời Gian</h5>
+                <p class="text-muted">Mở cửa từ 5:00 sáng đến 22:00 tối tất cả các ngày.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="bg-light py-5">
+    <div class="container">
+        <div class="text-center">
+            <h2 class="section-title text-dark">Các Gói Tập Phổ Biến</h2>
+            <p class="text-muted mb-5">Chọn lộ trình phù hợp với mục tiêu của bạn</p>
+        </div>
+
+        <div class="row">
+            {% for p in packages %}
+            <div class="col-md-4 mb-4">
+                <div class="card gym-card h-100 text-center p-4">
+                    <div class="card-body">
+                        <h4 class="card-title font-weight-bold text-uppercase">{{ p.name }}</h4>
+                        <div class="price-tag my-3">
+                            {{ "{:,.0f}".format(p.price) }} <small class="text-muted" style="font-size: 1rem">VNĐ</small>
+                        </div>
+                        <span class="badge badge-pill badge-info px-3 py-2 mb-4">Thời hạn: {{ p.duration }} ngày</span>
+
+                        <ul class="list-unstyled text-left mx-auto" style="max-width: 200px;">
+                            <li class="mb-2"><i class="fas fa-check text-success mr-2"></i>Full dịch vụ</li>
+                            <li class="mb-2"><i class="fas fa-check text-success mr-2"></i>Không giới hạn giờ</li>
+                            <li class="mb-2"><i class="fas fa-check text-success mr-2"></i>Tư vấn miễn phí</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h2 class="section-title text-dark">Không Gian Tập Luyện</h2>
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <img src="https://images.unsplash.com/photo-1571902943202-507ec2618e8f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" class="img-fluid rounded shadow" alt="Gym 1">
+        </div>
+        <div class="col-md-6 mb-4">
+            <img src="https://images.unsplash.com/photo-1574680096145-d05b474e2155?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" class="img-fluid rounded shadow" alt="Gym 2">
+        </div>
+    </div>
+</div>
+
 {% endblock %}

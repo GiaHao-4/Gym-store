@@ -1,97 +1,30 @@
-{% extends 'admin/master.html' %}
+{% extends 'layout/base.html' %}
 
 {% block head %}
 {{ super() }}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
 <style>
-    /* CSS TÙY CHỈNH CHO DASHBOARD */
-    /* CSS MỚI CHO BODY - PHƯƠNG ÁN 2 */
-    body {
-        /* Không đặt màu nền ở đây nữa */
-        min-height: 100vh;
-        position: relative;
-    }
-
-    /* Dùng pseudo-element để chèn ảnh nền và làm mờ nó */
+    /* Dùng pseudo-element để chèn ảnh nền và làm mờ */
     body::before {
         content: "";
         position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: -2; /* Nằm dưới cùng */
-
-        /* Link ảnh phòng gym (Bạn có thể thay link khác nếu thích) */
+        top: 0; left: 0; right: 0; bottom: 0;
+        z-index: -2;
         background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop');
         background-size: cover;
         background-position: center;
-        background-repeat: no-repeat;
-
-        /* Làm mờ ảnh đi một chút để đỡ rối mắt */
         filter: blur(4px);
     }
 
-    /* Lớp phủ màu tối lên trên ảnh để làm nổi bật nội dung */
     body::after {
         content: "";
         position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: -1; /* Nằm trên ảnh nền, nhưng dưới nội dung chính */
-        /* Lớp phủ gradient đen mờ */
+        top: 0; left: 0; right: 0; bottom: 0;
+        z-index: -1;
         background: linear-gradient(to bottom, rgba(20, 20, 30, 0.85), rgba(78, 115, 223, 0.1));
     }
 
-    /* --- CẬP NHẬT MỘT CHÚT MÀU SẮC CÁC THẺ CHO HỢP NỀN TỐI --- */
-    /* Đổi màu tiêu đề banner sang trắng cho nổi */
-    .welcome-banner h2, .welcome-banner p {
-        color: white !important;
-    }
-
-    /* Các thẻ card vẫn giữ nền trắng cho sạch sẽ */
-    .stat-card, .card {
-        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2) !important; /* Tăng độ đậm của bóng đổ lên */
-    }
-
-    .dashboard-title {
-        color: #4e73df;
-        font-weight: 700;
-        margin-bottom: 30px;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-
-
-    .card-left-border-primary {
-        border-left: 5px solid #4e73df;
-    }
-
-    .card-left-border-success {
-        border-left: 5px solid #1cc88a;
-    }
-
-    .card-left-border-warning {
-        border-left: 5px solid #f6c23e;
-    }
-
-    .stat-label {
-        font-size: 0.8rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        margin-bottom: 5px;
-    }
-
-    .stat-value {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #5a5c69;
-    }
-
-    /* Phần Banner chào mừng */
     .welcome-banner {
         background: linear-gradient(45deg, #4e73df, #224abe);
         color: white;
@@ -105,18 +38,17 @@
         border-radius: 50px;
         padding: 10px 25px;
         font-weight: 600;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        margin-right: 10px; /* Thêm khoảng cách giữa các nút */
     }
 </style>
 {% endblock %}
 
-{% block body %}
+{% block content %} {# ĐỔI TỪ block body SANG block content #}
 <div class="container-fluid mt-4">
-
     <div class="welcome-banner d-flex justify-content-between align-items-center">
         <div>
-            <h2 class="mb-1">Xin chào, {{ current_user.full_name }}! 👋</h2>
-            <p class="mb-0 opacity-75">Chúc bạn một ngày làm việc hiệu quả tại Muscle Gym.</p>
+            <h2 class="mb-1" style="color: white !important;">Xin chào, {{ current_user.full_name }}! 👋</h2>
+            <p class="mb-0 opacity-75" style="color: white !important;">Chúc bạn một ngày làm việc hiệu quả tại Muscle Gym.</p>
         </div>
         <div class="d-none d-md-block">
             <i class="fas fa-dumbbell fa-4x" style="opacity: 0.3;"></i>
@@ -131,16 +63,15 @@
                 </div>
                 <div class="card-body">
                     <p>Truy cập nhanh vào các chức năng quản lý thường dùng:</p>
-                    <a href="/reception/register-flow" class="btn btn-primary btn-quick-action mr-2">
+                    <a href="/reception/register-flow" class="btn btn-primary btn-quick-action">
                         <i class="fas fa-plus-circle"></i> Đăng ký hội viên
                     </a>
-                    <a href="/reception/member" class="btn btn-info btn-quick-action mr-2">
+                    <a href="/reception/member" class="btn btn-info btn-quick-action text-white">
                         <i class="fas fa-list"></i> Danh Sách Hội Viên
                     </a>
                 </div>
             </div>
         </div>
     </div>
-
 </div>
 {% endblock %}
