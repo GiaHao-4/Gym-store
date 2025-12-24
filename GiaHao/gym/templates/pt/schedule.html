@@ -1,54 +1,55 @@
 {% extends "layout/base.html" %}
-{% block title %}Lịch tập hội viên{% endblock %}
+{% block title %}Quản lý Lịch tập{% endblock %}
 
 {% block css %}
-<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
 <style>
+    /* --- CSS CHO LỊCH (Giữ nguyên) --- */
     #calendar {
         background: #fff;
         padding: 20px;
         border-radius: 8px;
         box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
         min-height: 800px;
+        font-family: var(--bs-body-font-family);
     }
+    .fc-toolbar-title {
+        font-size: 1.5rem !important;
+        text-transform: uppercase;
+        color: #0d6efd;
+        font-weight: 700;
+    }
+    .fc-event { cursor: pointer; }
 
-    /* CSS trạng thái - Phải khớp với className trả về từ Python */
-    .fc-event-completed {
-        background-color: #198754 !important; /* Xanh lá */
-        border-color: #198754 !important;
-    }
-    .fc-event-pending {
-        background-color: #0d6efd !important; /* Xanh dương */
-        border-color: #0d6efd !important;
-    }
-    .fc-event-cancelled {
-        background-color: #dc3545 !important; /* Đỏ */
-        border-color: #dc3545 !important;
-    }
+    /* Màu trạng thái */
+    .fc-event-completed { background-color: #198754 !important; border-color: #198754 !important; }
+    .fc-event-pending { background-color: #0d6efd !important; border-color: #0d6efd !important; }
+    .fc-event-cancelled { background-color: #dc3545 !important; border-color: #dc3545 !important; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <div class="row mb-3 align-items-center">
-        <div class="col-md-6">
-            <h2 class="text-primary"><i class="bi bi-calendar-week me-2"></i>Lịch trình huấn luyện</h2>
-        </div>
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-body py-2">
-                    <div class="row g-2 align-items-center">
-                        <div class="col-auto">
-                            <label class="fw-bold"><i class="bi bi-funnel"></i> Lọc theo hội viên:</label>
-                        </div>
-                        <div class="col">
-                            <select class="form-select form-select-sm" id="memberFilter" onchange="filterCalendar()">
-                                <option value="all" selected>-- Tất cả hội viên --</option>
-                                {% for m in members %}
-                                <option value="{{ m.user_id }}">{{ m.full_name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
+
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body py-3">
+            <div class="row align-items-center">
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <h3 class="m-0 text-primary fw-bold">
+                        <i class="bi bi-calendar-check me-2"></i>QUẢN LÝ LỊCH TẬP
+                    </h3>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-md-end align-items-center">
+                        <label for="memberFilter" class="fw-bold me-3 text-nowrap">
+                            <i class="bi bi-funnel-fill"></i> Lọc hội viên:
+                        </label>
+                        <select class="form-select w-auto" id="memberFilter" style="min-width: 250px;">
+                            <option value="all" selected>-- Tất cả hội viên --</option>
+                            {% for m in members %}
+                            <option value="{{ m.id }}">{{ m.full_name }} ({{ m.username }})</option>
+                            {% endfor %}
+                        </select>
                     </div>
                 </div>
             </div>
@@ -56,55 +57,55 @@
     </div>
 
     <div id='calendar'></div>
+
 </div>
 
 <div class="modal fade" id="eventDetailModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-info text-white">
-                <h5 class="modal-title"><i class="bi bi-info-circle me-2"></i>Chi tiết buổi tập</h5>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold"><i class="bi bi-info-circle-fill me-2"></i>CHI TIẾT BUỔI TẬP</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label class="fw-bold text-muted small">HỘI VIÊN</label>
-                    <h5 id="detailMemberName" class="text-primary">Loading...</h5>
+            <div class="modal-body p-4">
+                <div class="text-center mb-4 border-bottom pb-3">
+                    <h4 id="detailMemberName" class="text-primary fw-bold mb-2">Loading...</h4>
+                    <span id="detailStatus">...</span>
                 </div>
-
-                <div class="row mb-3">
+                <div class="row g-3">
                     <div class="col-6">
-                        <label class="fw-bold text-muted small">THỜI GIAN</label>
-                        <div id="detailTime">...</div>
+                        <small class="text-muted fw-bold text-uppercase">Bắt đầu</small>
+                        <div id="detailStart" class="fs-5 fw-bold text-dark">...</div>
                     </div>
                     <div class="col-6">
-                        <label class="fw-bold text-muted small">TRẠNG THÁI</label>
-                        <div id="detailStatus">...</div>
+                        <small class="text-muted fw-bold text-uppercase">Kết thúc</small>
+                        <div id="detailEnd" class="fs-5 fw-bold text-dark">...</div>
                     </div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="fw-bold text-muted small">NỘI DUNG BÀI TẬP</label>
-                    <ul class="list-group list-group-flush" id="detailExercises">
-                        </ul>
-                </div>
-
-                <div class="mb-3">
-                    <label class="fw-bold text-muted small">GHI CHÚ CỦA PT</label>
-                    <p id="detailNote" class="fst-italic text-muted">Không có ghi chú.</p>
+                    <div class="col-12 mt-3">
+                        <small class="text-muted fw-bold text-uppercase">Bài tập</small>
+                        <ul class="list-unstyled mb-0 bg-light p-3 rounded mt-1 border" id="detailExercises"></ul>
+                    </div>
+                    <div class="col-12 mt-3">
+                        <small class="text-muted fw-bold text-uppercase">Ghi chú</small>
+                        <p id="detailNote" class="fst-italic text-secondary mt-1">Không có ghi chú.</p>
+                    </div>
                 </div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer bg-light">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                <button type="button" class="btn btn-primary">Cập nhật trạng thái</button>
             </div>
         </div>
     </div>
 </div>
 
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var calendarEl = document.getElementById('calendar');
+        var filterSelect = document.getElementById('memberFilter');
 
+        // Cấu hình FullCalendar
         var calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'timeGridWeek',
             headerToolbar: {
@@ -117,78 +118,61 @@
             slotMinTime: "06:00:00",
             slotMaxTime: "22:00:00",
             allDaySlot: false,
+            height: 'auto',
+            nowIndicator: true,
 
-            // --- ĐÂY LÀ PHẦN QUAN TRỌNG NHẤT BẠN ĐANG THIẾU ---
+            // Lấy dữ liệu
             events: {
-                url: '/api/schedule-events', // Gọi API thật
+                url: '/api/schedule-events',
                 method: 'GET',
                 extraParams: function() {
                     return {
-                        member_id: document.getElementById('memberFilter').value,
-                        _: new Date().getTime() // Tránh lỗi cache
+                        // Lấy giá trị trực tiếp từ thẻ select chuẩn
+                        member_id: filterSelect.value,
+                        _: new Date().getTime()
                     };
                 },
-                failure: function() {
-                    console.log('Lỗi tải lịch!'); // Ghi lỗi ngầm vào Console thay vì hiện Alert
-                }
+                failure: function() { console.error('Lỗi tải lịch'); }
             },
-            // --------------------------------------------------
 
+            // Click xem chi tiết
             eventClick: function(info) {
-                var eventObj = info.event;
-                var props = eventObj.extendedProps;
+                var props = info.event.extendedProps;
+                document.getElementById('detailMemberName').innerText = props.memberName || 'Không rõ';
 
-                // Điền thông tin vào Modal
-                document.getElementById('detailMemberName').innerText = props.memberName;
+                const timeOpts = { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' };
+                document.getElementById('detailStart').innerText = info.event.start.toLocaleTimeString('vi-VN', timeOpts);
+                document.getElementById('detailEnd').innerText = info.event.end ? info.event.end.toLocaleTimeString('vi-VN', timeOpts) : '...';
 
-                var timeStr = eventObj.start.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
-                if (eventObj.end) {
-                    timeStr += " - " + eventObj.end.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
-                }
-                document.getElementById('detailTime').innerText = timeStr;
+                let statusHtml = '<span class="badge bg-secondary">Chưa rõ</span>';
+                if (props.status === 'completed') statusHtml = '<span class="badge bg-success rounded-pill px-3">Đã hoàn thành</span>';
+                else if (props.status === 'cancelled') statusHtml = '<span class="badge bg-danger rounded-pill px-3">Đã hủy</span>';
+                else statusHtml = '<span class="badge bg-primary rounded-pill px-3">Sắp tới</span>';
+                document.getElementById('detailStatus').innerHTML = statusHtml;
 
-                // Xử lý trạng thái
-                var statusHTML = '';
-                if(props.status === 'completed') {
-                    statusHTML = '<span class="badge bg-success">Đã hoàn thành</span>';
-                } else if (props.status === 'cancelled') {
-                    statusHTML = '<span class="badge bg-danger">Đã hủy</span>';
-                } else {
-                    statusHTML = '<span class="badge bg-primary">Sắp tới / Chưa tập</span>';
-                }
-                document.getElementById('detailStatus').innerHTML = statusHTML;
-
-                // Xử lý bài tập
-                var exList = document.getElementById('detailExercises');
+                const exList = document.getElementById('detailExercises');
                 exList.innerHTML = '';
                 if (props.exercises && props.exercises.length > 0) {
-                    props.exercises.forEach(function(ex) {
-                        var li = document.createElement('li');
-                        li.className = 'list-group-item px-0';
-                        li.innerHTML = '<i class="bi bi-check2-circle text-primary me-2"></i> ' + ex;
-                        exList.appendChild(li);
+                    props.exercises.forEach(ex => {
+                        exList.innerHTML += `<li class="d-flex align-items-center mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>${ex}</li>`;
                     });
                 } else {
                     exList.innerHTML = '<li class="text-muted fst-italic">Chưa có bài tập chi tiết</li>';
                 }
-
                 document.getElementById('detailNote').innerText = props.note || "Không có ghi chú.";
 
-                var myModal = new bootstrap.Modal(document.getElementById('eventDetailModal'));
-                myModal.show();
+                // Mở Modal (Dùng Bootstrap 5 JS thuần)
+                new bootstrap.Modal(document.getElementById('eventDetailModal')).show();
             }
         });
 
         calendar.render();
-        window.calendarApi = calendar; // Lưu biến để dùng ở ngoài
-    });
 
-    // --- HÀM LỌC CHUẨN (KHÔNG CÒN ALERT) ---
-    function filterCalendar() {
-        if (window.calendarApi) {
-            // Lệnh này bắt buộc lịch phải gọi lại API /api/schedule-events
-            window.calendarApi.refetchEvents();
-        }
-    }
+        // --- XỬ LÝ LỌC CƠ BẢN ---
+        // Khi người dùng chọn option khác -> Lịch tự tải lại
+        filterSelect.addEventListener('change', function() {
+            calendar.refetchEvents();
+        });
+    });
 </script>
 {% endblock %}

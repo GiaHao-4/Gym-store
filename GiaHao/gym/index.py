@@ -182,6 +182,7 @@ def view_schedule():
     return render_template('pt/schedule.html', members=members)
 
 
+
 @app.route('/api/schedule-events')
 def get_schedule_events():
     # FullCalendar gửi lên start và end dạng chuỗi ISO (VD: '2025-12-01T00:00:00')
