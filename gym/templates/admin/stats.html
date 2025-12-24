@@ -1,0 +1,124 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Báo cáo Thống kê - Muscle Gym{% endblock %}
+
+{% block head %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="text-primary fw-bold text-uppercase mb-4 border-start border-5 border-primary ps-3">
+        Báo cáo & Thống kê Năm {{ year }}
+    </h2>
+
+    <div id="data-container"
+         data-revenue='{{ revenue_list | tojson }}'
+         data-members='{{ member_list | tojson }}'
+         style="display: none;">
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6 col-lg-4">
+            <div class="card bg-primary text-white shadow-sm p-4 rounded-4 border-0">
+                <h6 class="text-uppercase small fw-bold">Hội viên đang hoạt động</h6>
+                <h2 class="fw-bold m-0">{{ active_count }}</h2>
+                <i class="fas fa-users fa-2x mt-2 opacity-25"></i>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card bg-success text-white shadow-sm p-4 rounded-4 border-0">
+                <h6 class="text-uppercase small fw-bold">Tổng doanh thu năm</h6>
+                <h2 class="fw-bold m-0">{{ "{:,.0f}".format(revenue_list|sum) }} ₫</h2>
+                <i class="fas fa-wallet fa-2x mt-2 opacity-25"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-lg-7">
+            <div class="card shadow-sm p-4 rounded-4 border-0 h-100">
+                <h5 class="fw-bold mb-4 text-dark"><i class="fas fa-chart-bar me-2 text-primary"></i>Doanh thu 12 tháng</h5>
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card shadow-sm p-4 rounded-4 border-0 h-100">
+                <h5 class="fw-bold mb-4 text-dark"><i class="fas fa-chart-line me-2 text-danger"></i>Hội viên mới</h5>
+                <canvas id="memberChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-header bg-dark text-white fw-bold py-3">
+            <i class="fas fa-list me-2"></i>DANH SÁCH HỘI VIÊN CÒN HẠN TẬP (RPT-03)
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Họ tên</th>
+                        <th>Điện thoại</th>
+                        <th>Gói tập</th>
+                        <th class="text-center">Ngày đăng ký</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m, r, p in active_members_list %}
+                    <tr>
+                        <td class="ps-4 fw-bold text-dark">{{ m.full_name }}</td>
+                        <td>{{ m.phone }}</td>
+                        <td><span class="badge bg-info-subtle text-info border border-info-subtle px-3 py-2">{{ p.name }}</span></td>
+                        <td class="text-center text-muted">{{ r.created_date.strftime('%d/%m/%Y') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Đọc dữ liệu từ thẻ ẩn
+        const container = document.getElementById('data-container');
+        const revenueData = JSON.parse(container.getAttribute('data-revenue'));
+        const memberData = JSON.parse(container.getAttribute('data-members'));
+        const months = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
+
+        // Cấu hình Biểu đồ Doanh thu
+        new Chart(document.getElementById('revenueChart'), {
+            type: 'bar',
+            data: {
+                labels: months,
+                datasets: [{
+                    label: 'Doanh thu (VNĐ)',
+                    data: revenueData,
+                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                    borderRadius: 5
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } } }
+        });
+
+        // Cấu hình Biểu đồ Hội viên
+        new Chart(document.getElementById('memberChart'), {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [{
+                    label: 'Số hội viên mới',
+                    data: memberData,
+                    borderColor: '#e74a3b',
+                    backgroundColor: 'rgba(231, 74, 59, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } } }
+        });
+    });
+</script>
+{% endblock %}
